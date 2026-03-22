@@ -1,0 +1,56 @@
+admin123@admin123-HP-ProBook-450-G7:~/WorkProject/SimpleBridge/relayer$ spl-token authorize BgKCyPNBgTbW7YoEjhjeLSrVT7hqUCBWWZDPZoLpDPDt mint AM47ECaTRbySgWQDxjbZKkjcKKcvVwRUc7hS65gQdiD2 --url devnet
+Updating BgKCyPNBgTbW7YoEjhjeLSrVT7hqUCBWWZDPZoLpDPDt
+  Current mint: Bo8DDqBL63vdmyZXxXyR34nrvD21YcJaA3rZpFGK9ruT
+  New mint: AM47ECaTRbySgWQDxjbZKkjcKKcvVwRUc7hS65gQdiD2
+
+Signature: 3RR337hicTxs3RTBmuzbep8VwjSWeQZ4FzXCcxqqgDTFCNkL1rS7R6VZgdRRGmKjNGaMNDbiqfCGUYGDZuH8z2ob
+
+
+
+
+
+"BEFORE" 
+
+admin123@admin123-HP-ProBook-450-G7:~/WorkProject/SimpleBridge/relayer$ spl-token display BgKCyPNBgTbW7YoEjhjeLSrVT7hqUCBWWZDPZoLpDPDt --url devnet
+
+SPL Token Mint
+  Address: BgKCyPNBgTbW7YoEjhjeLSrVT7hqUCBWWZDPZoLpDPDt
+  Program: TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA
+  Supply: 0
+  Decimals: 18
+  Mint authority: Bo8DDqBL63vdmyZXxXyR34nrvD21YcJaA3rZpFGK9ruT
+  Freeze authority: (not set)
+
+
+  "AFTER"
+  admin123@admin123-HP-ProBook-450-G7:~/WorkProject/SimpleBridge/relayer$ spl-token display BgKCyPNBgTbW7YoEjhjeLSrVT7hqUCBWWZDPZoLpDPDt --url devnet
+
+SPL Token Mint
+  Address: BgKCyPNBgTbW7YoEjhjeLSrVT7hqUCBWWZDPZoLpDPDt
+  Program: TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA
+  Supply: 0
+  Decimals: 18
+  Mint authority: AM47ECaTRbySgWQDxjbZKkjcKKcvVwRUc7hS65gQdiD2
+  Freeze authority: (not set)
+
+
+
+  admin123@admin123-HP-ProBook-450-G7:~/WorkProject/SimpleBridge/relayer$ node -e "
+const { PublicKey } = require('@solana/web3.js');
+const [pda] = PublicKey.findProgramAddressSync(
+  [Buffer.from('adapter_authority')],
+  new PublicKey('HEWS6f9LPcuZJtKi7NZ3jbaZk6JRF58Wzc89WgnY7bSJ')
+);
+console.log('adapter_authority PDA:', pda.toBase58());
+"
+adapter_authority PDA: AM47ECaTRbySgWQDxjbZKkjcKKcvVwRUc7hS65gQdiD2
+
+INTIALIZE.MJS
+node initialize.mjs
+adapter_state PDA:     3TGcrUG8ePafKnRFt9SrSpS9WSh1N7vX4ydh5nHEKJCc
+adapter_authority PDA: AM47ECaTRbySgWQDxjbZKkjcKKcvVwRUc7hS65gQdiD2
+Relayer pubkey:        779mqmc8nWz9jTUV3C8iDGs9MSXJYchKTSAspzjvo4Tr
+Initializing...
+
+✅ Program initialized!
+Transaction: 4yHGD5jYHxg7tFhvzUW4MhaLr2NG9tGLqt6CibfVN2rzKAhJ4P61oJCJqpKQm17EeqJRbhDEGfnUuHrbWcrX78BN
