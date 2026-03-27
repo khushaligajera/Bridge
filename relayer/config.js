@@ -21,7 +21,7 @@ export const config = {
   // ── Solana ─────────────────────────────────────────────────────────────────
   solanaRpc:             required("SOLANA_RPC"),
   bridgeProgramId:       required("BRIDGE_PROGRAM_ID"),
-  wscaiMint:             required("WSCAT_MINT_ADDRESS"),
+  wscaiMint:             required("WSCAI_MINT_ADDRESS"),
   relayerKeypairPath:    required("RELAYER_KEYPAIR_PATH"),  // path to .json
 
   // ── Bridge settings ────────────────────────────────────────────────────────

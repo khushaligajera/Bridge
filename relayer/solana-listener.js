@@ -18,7 +18,7 @@ function subscribe() {
   const connection = getSolanaConnection();
   const programId  = new PublicKey(config.bridgeProgramId);
 
-  console.log("[solana-listener] subscribing to program logs for", programId.toBase58());
+  console.log("[solana-listener] subscribing to program logs for\n", programId.toBase58());
 
   _subscriptionId = connection.onLogs(
     programId,
@@ -29,7 +29,7 @@ function subscribe() {
     "confirmed"
   );
 
-  console.log("[solana-listener] subscribed, id:", _subscriptionId);
+  console.log("[solana-listener] subscribed, id:\n", _subscriptionId);
 }
 
 function handleLogs(logs, signature) {
@@ -42,7 +42,7 @@ function handleLogs(logs, signature) {
     if (!event) continue;
 
     onBurnInitiated(event, signature).catch((err) =>
-      console.error("[solana-listener] error handling BurnInitiated:", err.message)
+      console.error("[solana-listener] error handling BurnInitiated:\n", err.message)
     );
   }
 }
@@ -94,7 +94,7 @@ async function onBurnInitiated({ burnId, evmRecipient, amount, timestamp }, sign
 
 // Pre-computed discriminator for BurnInitiated — regenerate with:
 // node -e "const c=require('crypto');console.log(c.createHash('sha256').update('event:BurnInitiated').digest().slice(0,8).toString('hex'))"
-const BURN_INITIATED_DISC = Buffer.from("placeholder00000", "hex"); // REPLACE with real discriminator
+const BURN_INITIATED_DISC = Buffer.from("f3a4bc03737f06db", "hex"); // REPLACE with real discriminator
 
 function tryDecodeBurnInitiated(base64) {
   try {

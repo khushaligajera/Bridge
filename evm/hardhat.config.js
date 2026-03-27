@@ -17,10 +17,25 @@ module.exports = {
     },
   },
   networks: {
-    hardhat: {},
+    hardhat: {
+      forking:{
+        url:"https://mainnet-rpc.scai.network",
+        enabled:true,
+      },
+      chainId:34,
+    },
+    localhost:{
+       url: "http://127.0.0.1:8545",
+      chainId: 34,
+    },
     sepolia: {
       url: RPC_URL,
       chainId: 11155111,
+      accounts: [DEPLOYER_KEY],
+    },
+    scai: {
+      url: "https://mainnet-rpc.scai.network",
+      chainId: 34,
       accounts: [DEPLOYER_KEY],
     },
   },

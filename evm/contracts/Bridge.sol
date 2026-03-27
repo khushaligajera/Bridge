@@ -1,20 +1,20 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
-
 /**
- * @title Bridge
- * @notice Locks SCAI tokens on EVM and emits events for the off-chain relayer.
- *         The relayer listens for TokensLocked and mints wSCAI on Solana.
- *         On the return path, the relayer calls unlockTokens after a Solana burn.
+ * @title Bridge (Native Token Version)
+ * @notice Locks native SCAI on the SCAI chain and emits events for the
+ *         off-chain relayer. The relayer mints wSCAI on Solana.
+ *         On return path, relayer calls unlockNative() after a Solana burn.
+ *
+ * @dev No IERC20 needed — native token is sent as msg.value.
+ *      No approve() step required from the user.
  */
 contract Bridge is Ownable {
 
     // ── State ────────────────────────────────────────────────────────────────
 
-    IERC20  public scaiToken;
     address public relayerSigner;       // only address allowed to call unlockTokens
     uint256 public bridgeFee;           // flat fee deducted from every lock
     bool    public paused;
@@ -33,7 +33,7 @@ contract Bridge is Ownable {
      * @param fee              Fee collected by the bridge.
      * @param timestamp        block.timestamp at lock time (used for event expiry).
      */
-    event TokensLocked(
+    event coinsLocked(
         bytes32 indexed orderId,
         address indexed sender,
         bytes32         solanaRecipient,
@@ -45,7 +45,7 @@ contract Bridge is Ownable {
     /**
      * @dev Emitted when the relayer releases tokens back to an EVM recipient.
      */
-    event TokensUnlocked(
+    event coinsUnlocked(
         bytes32 indexed orderId,
         address indexed recipient,
         uint256         amount
@@ -59,14 +59,12 @@ contract Bridge is Ownable {
     // ── Constructor ───────────────────────────────────────────────────────────
 
     constructor(
-        address _scaiToken,
+    
         address _relayerSigner,
         uint256 _bridgeFee
     ) Ownable(msg.sender) {
-        require(_scaiToken      != address(0), "Zero token address");
         require(_relayerSigner  != address(0), "Zero relayer address");
 
-        scaiToken     = IERC20(_scaiToken);
         relayerSigner = _relayerSigner;
         bridgeFee     = _bridgeFee;
     }
@@ -81,25 +79,22 @@ contract Bridge is Ownable {
     // ── User-facing ───────────────────────────────────────────────────────────
 
     /**
-     * @notice Lock `amount` SCAI tokens in this contract.
+     * @notice Lock native SCAI tokens in this contract.
      *         The relayer will mint an equivalent amount of wSCAI on Solana
      *         to `solanaRecipient` after deducting the bridge fee.
      *
-     * @param amount           Total SCAI amount to send (including fee).
+     
      * @param solanaRecipient  Destination Solana pubkey encoded as bytes32.
      *                         Off-chain: `Buffer.from(publicKey.toBytes())`.
      */
-    function lockTokens(
-        uint256 amount,
+    function lockCoins(
         bytes32 solanaRecipient
-    ) external notPaused {
-        require(amount > bridgeFee,       "Bridge: amount <= fee");
+    ) external payable notPaused {
+        require(msg.value > bridgeFee,       "Bridge: amount <= fee");
         require(solanaRecipient != 0,     "Bridge: zero solana recipient");
 
-        // Pull tokens from caller — caller must have approved this contract first.
-        scaiToken.transferFrom(msg.sender, address(this), amount);
 
-        uint256 netAmount = amount - bridgeFee;
+        uint256 netAmount = msg.value - bridgeFee;
 
         // Deterministic orderId — uniqueness within same block ensured by block.number.
         bytes32 orderId = keccak256(abi.encodePacked(
@@ -110,7 +105,7 @@ contract Bridge is Ownable {
             block.number
         ));
 
-        emit TokensLocked(
+        emit coinsLocked(
             orderId,
             msg.sender,
             solanaRecipient,
@@ -123,26 +118,33 @@ contract Bridge is Ownable {
     // ── Relayer-facing ────────────────────────────────────────────────────────
 
     /**
-     * @notice Release locked tokens to `recipient`.
+     * @notice Release locked native SCAI to `recipient`.
      *         Only callable by the authorised relayer signer.
      *         `orderId` must match the burnId emitted on Solana.
      */
-    function unlockTokens(
+    function unlockCoins(
         bytes32 orderId,
-        address recipient,
+        address payable recipient,
         uint256 amount
     ) external notPaused {
         require(msg.sender == relayerSigner,  "Bridge: not relayer");
         require(!processedOrders[orderId],    "Bridge: already processed");
         require(recipient != address(0),      "Bridge: zero recipient");
         require(amount > 0,                   "Bridge: zero amount");
+        require(address(this).balance>=amount,"Bridge:insufficient balance");
 
         processedOrders[orderId] = true;
 
-        scaiToken.transfer(recipient, amount);
+        (bool successs,)=recipient.call{value:amount}("");
+        require(successs,"Bridge,transfer failed");
 
-        emit TokensUnlocked(orderId, recipient, amount);
+        emit coinsUnlocked(orderId, recipient, amount);
     }
+
+    //─── Receive native token ───────────────────────────────────────────────────
+     
+     /// @dev Allows contract to receive native SCAI directly if needed.
+     receive() external payable {}
 
     // ── Owner controls ────────────────────────────────────────────────────────
 
@@ -167,9 +169,15 @@ contract Bridge is Ownable {
      *         Should be used only when bridge is already paused.
      */
     function emergencyWithdraw() external onlyOwner {
-        uint256 balance = scaiToken.balanceOf(address(this));
+        uint256 balance = address(this).balance;
         require(balance > 0, "Bridge: nothing to withdraw");
-        scaiToken.transfer(owner(), balance);
+          (bool success, ) = payable(owner()).call{value: balance}("");
+          require(success,"Bridge:withdraw failed");
         emit EmergencyWithdraw(owner(), balance);
     }
+
+    ///@notice how much native SCAI is locked in this contract 
+function lockedBalance() external view returns (uint256){
+    return address(this).balance;
+}
 }

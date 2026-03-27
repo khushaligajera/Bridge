@@ -8,7 +8,7 @@ import { sleep }          from "./retry.js";
 const { PublicKey } = await import("@solana/web3.js");
 
 const BRIDGE_ABI = [
-  "event TokensLocked(bytes32 indexed orderId, address indexed sender, bytes32 solanaRecipient, uint256 amount, uint256 fee, uint256 timestamp)",
+  "event coinsLocked(bytes32 indexed orderId, address indexed sender, bytes32 solanaRecipient, uint256 amount, uint256 fee, uint256 timestamp)",
 ];
 
 let _provider;
@@ -28,7 +28,7 @@ async function connect() {
 
     const contract = new ethers.Contract(config.bridgeContractAddress, BRIDGE_ABI, _provider);
 
-    contract.on("TokensLocked", onTokensLocked);
+    contract.on("coinsLocked", onCoinsLocked);
 
     // Reconnect on error or close.
     _provider.websocket.on("error", handleDisconnect);
@@ -42,7 +42,7 @@ async function connect() {
   }
 }
 
-async function onTokensLocked(orderId, sender, solanaRecipient, amount, fee, timestamp, event) {
+async function onCoinsLocked(orderId, sender, solanaRecipient, amount, fee, timestamp, event) {
   try {
     // ── Step 1: Validate ─────────────────────────────────────────────────────
 

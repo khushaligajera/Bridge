@@ -1,4 +1,5 @@
 import { Connection, Keypair, PublicKey } from "@solana/web3.js";
+import { parseUnits } from "ethers";
 import { getAssociatedTokenAddress, getAccount } from "@solana/spl-token";
 import pkg from "@coral-xyz/anchor";
 const { AnchorProvider, Program, Wallet, BN } = pkg;
@@ -24,7 +25,7 @@ const ataInfo = await getAccount(connection, userAta);
 console.log("wSCAI balance:", ataInfo.amount.toString());
 
 const evmRecipientBytes = Buffer.from(EVM_ADDRESS, "hex");
-const amount            = new BN("5000000000000000000"); // burn 5 wSCAI
+const amount = new BN(parseUnits("0.00008", 18).toString());// burn 5 wSCAI
 const slot              = await connection.getSlot();
 const slotBN            = new BN(slot);
 
@@ -34,7 +35,7 @@ const [burnOrder] = PublicKey.findProgramAddressSync([
   Buffer.from(new BN(slot).toArrayLike(Buffer, "le", 8)),
 ], PROGRAM_ID);
 
-console.log("Burning 5 wSCAI to release SCAI on Sepolia to:", "0x" + EVM_ADDRESS);
+console.log("Burning  wSCAI to release SCAI on Sepolia to: \n", "0x" + EVM_ADDRESS);
 
 const tx = await program.methods
   .initiateBurn(Array.from(evmRecipientBytes), amount, slotBN)

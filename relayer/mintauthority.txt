@@ -54,3 +54,16 @@ Initializing...
 
 ✅ Program initialized!
 Transaction: 4yHGD5jYHxg7tFhvzUW4MhaLr2NG9tGLqt6CibfVN2rzKAhJ4P61oJCJqpKQm17EeqJRbhDEGfnUuHrbWcrX78BN
+
+
+"SOLANA-LISTENER.JS"
+cd ~/WorkProject/SimpleBridge/relayer
+
+# Get the real discriminator
+node -e "
+const crypto = require('crypto');
+const d = crypto.createHash('sha256').update('event:BurnInitiated').digest().slice(0,8);
+console.log('hex:', d.toString('hex'));
+"
+
+hex: f3a4bc03737f06db
